@@ -1,0 +1,27 @@
+<?php
+/**
+ * Implementation of hook_schema().
+ */
+function oc_place2book_feedback_schema() {
+  return array(
+    'ding_place2book_feedback' => array(
+      'description' => 'Table to hold information about Place2Book feedback system.',
+      'fields' => array(
+        'nid' => array(
+          'description' => 'The foreign key to {node}.nid',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'feedback_sendt' => array(
+          'description' => 'Have the feedback be sendt.',
+          'type' => 'int',
+          'unsigned' => FALSE,
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+      'primary key' => array('nid'),
+    ),
+  );
+}

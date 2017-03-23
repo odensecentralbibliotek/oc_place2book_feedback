@@ -1,0 +1,5 @@
+name = oc place2book feedback
+description = Indhenter feedback via webform fra deltagere i place2book events med billetter.
+core = 7.x
+package = Ding!
+dependencies[] = ding_place2book

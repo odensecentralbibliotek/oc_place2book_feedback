@@ -1,0 +1,270 @@
+<?php
+include_once 'oc_place2book_feedback_admin.inc';
+/*
+ * Alter the place2book form to allow feedback retrival from ticket based events.
+ * 
+ */
+function oc_place2book_feedback_form_ding_event_node_form_alter(&$form, &$form_state, $form_id)
+{
+    $nid = isset($form['nid']['#value']) ? $form['nid']['#value'] : NULL;
+    $node_settings = place2book_settings($nid);
+    /*
+     * is the node already added to feedback ?
+     */
+    if(is_node_on_feedback_list($nid))
+    {
+        $node_settings['place2book_send_feedback'] = "1";
+    }
+    /*
+     * Seems #default_value is borked for checkbox.
+     */
+   $form['place2book']['place2book_send_feedback'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Indhent feedback'),
+    '#default_value' => isset($node_settings['place2book_send_feedback']) ? (bool)$node_settings['place2book_send_feedback'] :  $node_settings['defaults']['place2book_send_feedback'],
+    '#description' => t('If checked, a survey will be sendt to people who bougth ticket for the event.'),
+  );
+   /*
+    * auto check event feedback when we maintain p2b tickets.
+    */
+    $form['place2book']['place2book_send_feedback']['#states']['checked'] = array(
+     ':input[name="place2book[maintain_copy]"]' =>  array('checked' => TRUE)
+    );
+
+}
+/*
+ * Alter when form alter is run , to ensure we have access to p2b form alterations.
+ */
+function oc_place2book_feedback_module_implements_alter(&$implementations, $hook) {
+  $module = 'oc_place2book_feedback';
+  if ($hook != 'form_alter' || !isset($implementations[$module])) {
+    return;
+  }
+  $group = array($module => $implementations[$module]);
+  unset($implementations[$module]);
+  $implementations = $implementations+$group; //If you want your implementation to run last.
+}
+/*
+ * Implementation of hook_node_update()
+ */
+function oc_place2book_feedback_node_update($node) {
+    if ($node->type == "ding_event") {
+        if ($node->place2book['maintain_copy'] == 1 && $node->place2book['place2book_send_feedback'] == 1 && $node->place2book['passive'] != 1) {
+            if(!is_node_on_feedback_list($node->nid))
+            {
+               add_node_to_feedback_list($node->nid);
+            }
+        }
+        //if maintain copy is 0 or feedback is being disable
+        
+        elseif($node->place2book['maintain_copy'] == 0 || $node->place2book['place2book_send_feedback'] == 0)
+        {
+            if(is_node_on_feedback_list($node->nid))
+            {
+                 delete_node_on_feedback_list($node->nid);
+            }
+        }
+    }
+}
+/*
+ * Implementation of hook_node_insert()
+ */
+function oc_place2book_feedback_node_insert($node) {
+    if ($node->type == "ding_event") {
+        if ($node->place2book['maintain_copy'] == 1 && $node->place2book['place2book_send_feedback'] == 1 && $node->place2book['passive'] != 1) {
+            add_node_to_feedback_list($node->nid);
+        }
+    }
+}
+/*
+ * Implementation of hook_node_delete()
+ */
+function oc_place2book_feedback_node_delete($node) {
+    if ($node->type == "ding_event") {
+        if(is_node_on_feedback_list($node->nid))
+        {
+             delete_node_on_feedback_list($node->nid);
+        }
+    }
+}
+/*
+ * Cronjob to Handle sending surveys when events are closed.
+ */
+function oc_place2book_feedback_cron()
+{
+    /*
+     * Get all nodes from list of nids and where event end time is reached.
+     */
+    $nids = get_events_needing_feedback();
+    if(sizeof($nids) == 0)
+    {
+        return;
+    }
+    //use entityfieldquery to make it easier to write advanced selection querys.
+    //could likely gain speed if get_events_needing_feedback query was expanded.
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'ding_event')
+    ->propertyCondition('status', NODE_PUBLISHED)
+    ->entityCondition('entity_id', $nids, 'IN')
+    ->fieldCondition('field_ding_event_date', 'value2', date("Y-m-d"), '>');
+    $result = $query->execute();
+    /*
+     * Send feedback surveys to all participants of the selected events
+     * and make them as processed.
+     */
+    $survey_url = variable_get("oc_place2book_feedback_survey_url",'');
+    if (isset($result['node'])) {
+        foreach($result['node'] as $n_data)
+        {
+            /*
+             * Its ok to load entire node here , it will be cached
+             * and we save time when loading for multiple p2b keys in 
+             * get_event_participants where we have to load it anyways.
+             */
+            $node = node_load($n_data->nid);
+            $Purchases = get_event_participants($node->nid);
+            //send survey to participants
+            foreach($Purchases as $pdata)
+            {
+                send_survey_mail($pdata['customer'],$node->title,$survey_url);
+            }
+            //mark as processed.
+            mark_node_feedback_sendt($n_data->nid);
+        }
+    } 
+}
+/*
+ * Adds a node to the feedback list.
+ */
+function add_node_to_feedback_list($nid)
+{
+    $result = db_query('INSERT INTO {ding_place2book_feedback} ( nid,
+                              feedback_sendt
+                              )
+                      VALUES (:nid,
+                              :feedback_sendt)',
+                        array(
+                              ':nid' => $nid,
+                              ':feedback_sendt' => 0,
+                              )
+    );
+    if($result->rowCount() > 0)
+    {
+        return true;
+    }
+    return false;
+}
+/*
+ * Marks feedback sendt for node.
+ */
+function mark_node_feedback_sendt($nid)
+{
+    $result = db_query('UPDATE {ding_place2book_feedback} SET feedback_sendt=:feedback_sendt where nid=:nid',array(':nid' => $nid,'feedback_sendt' => 1));
+    if($result->rowCount() > 0)
+    {
+        return true;
+    }
+    return false;
+}
+/*
+ * Checks if a node already exists in the feedback table.
+ */
+function is_node_on_feedback_list($nid)
+{
+    $result = db_query('select count(nid) as count from {ding_place2book_feedback} where nid=:nid',array(':nid' => $nid))->fetchField();
+    if($result > 0)
+    {
+        return true;
+    }
+    return false;
+}
+/*
+ * Removes a node from the feedback list.
+ */
+function delete_node_on_feedback_list($nid)
+{
+    $result = db_query('DELETE FROM {ding_place2book_feedback} where nid = :nid',array(':nid' => $nid));
+    if($result->rowCount() > 0)
+    {
+        return true;
+    }
+    return false;
+}
+/*
+ * Get p2b seccode for event
+ */
+function get_event_participants($nid)
+{
+      $place2book_id = db_query('select place2book_id from {ding_place2book} where place2book_id !=-1 and nid=:nid',array(':nid' => $nid))->fetchField();
+      /*
+       * in case we decide to export to ddb cms add support for multiple
+       * p2b keys pr. library branch. But OC does not use this feature. 
+       */
+      $service_settings = variable_get('ding_place2book', array());
+      $node = node_load($nid);
+      //get the library id for the event
+      $field_ding_event_library = field_get_items('node', $node, 'field_ding_event_library');
+
+      $library_id = db_query('SELECT etid FROM {og} WHERE gid = :gid', array(':gid' => $field_ding_event_library[0]['gid']))->fetchField();
+      $api_key = place2book_get_api_key($library_id);
+      if ($api_key == NULL) {
+        return;
+      }
+
+      $headers = array(
+        'X-PLACE2BOOK-API-TOKEN' => $api_key,
+        'X-PLACE2BOOK-EVENT-ID' => $place2book_id,
+      );
+      $options = array(
+                'method' => 'GET',
+                'headers' => $headers,
+
+              );
+      $p2b_ticket_result = drupal_http_request($service_settings['service_url'] . '/available_tickets', $options);
+      $url = $p2b_ticket_result->headers['location']; //we have the url get the seccode.
+      $tmp = explode("=",parse_url($url,PHP_URL_QUERY));
+      $seccode = $tmp[1];
+      //Get the event participants.
+      unset($options['headers']['X-PLACE2BOOK-EVENT-ID']);
+      /*
+       * Can return json data but it is invalid and broken. place2book need to
+       * fix.
+       */
+      $p2b_participants_result = drupal_http_request("https://place2book.com/da/event_api/event_orders.xml?seccode=".$seccode, $options);
+      $xml = simplexml_load_string($p2b_participants_result->data);
+      $json = json_encode($xml);
+      $participants = json_decode($json,TRUE);
+
+      return $participants['event']['purchases'];
+}
+function get_events_needing_feedback()
+{
+    $result = db_query('select nid from {ding_place2book_feedback} where feedback_sendt=0')->fetchAllKeyed(0,0);
+    $return = array();
+    foreach($result as $value)
+    {
+        array_push($return,$value);
+    }
+    return $return;
+}
+function send_survey_mail($participant,$event_title,$survey_url)
+{
+       $email = $participant['email'];
+       $message = t('Du har deltaget i bibliotekets arrangement: @event \n vi vil gerne høre din mening og beder dig udfylde spørgeskemaet <a href="@survey_url">her</a>'
+               ,array('@event' => $event_title,'@survey_url'=>$survey_url));
+      // Send the email.
+      $params = array(
+        'subject' => 'Vi har brug for din mening!',
+        'body' => $message,
+      );
+      drupal_mail('oc_place2book_feedback', 'p2b_feedback', $email, language_default(), $params);
+}
+function oc_place2book_feedback_mail($key, &$message, $params)
+{
+    if($key == "p2b_feedback")
+    {
+        $message['body'] = $params['body'];
+        $message['subject'] = $params['subject'];
+    }
+}
