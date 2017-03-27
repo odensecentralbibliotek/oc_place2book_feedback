@@ -100,39 +100,31 @@ function oc_place2book_feedback_cron()
     {
         return;
     }
-    //use entityfieldquery to make it easier to write advanced selection querys.
-    //could likely gain speed if get_events_needing_feedback query was expanded.
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', 'ding_event')
-    ->propertyCondition('status', NODE_PUBLISHED)
-    ->entityCondition('entity_id', $nids, 'IN')
-    ->fieldCondition('field_ding_event_date', 'value2', date("Y-m-d"), '>');
-    $result = $query->execute();
     /*
      * Send feedback surveys to all participants of the selected events
      * and make them as processed.
      */
-    $survey_url = variable_get("oc_place2book_feedback_survey_url",'');
-    if (isset($result['node'])) {
-        foreach($result['node'] as $n_data)
+    $data = variable_get("ding_place2book_feedback_survey",'');
+    $survey_url = isset($data["oc_place2book_feedback_survey_url"]) ? $data["oc_place2book_feedback_survey_url"] :"";
+
+    foreach($nids as $n_data)
+    {
+        /*
+         * Its ok to load entire node here , it will be cached
+         * and we save time when loading for multiple p2b keys in 
+         * get_event_participants where we have to load it anyways.
+         */
+        $node = node_load($n_data);
+        $Purchases = get_event_participants($node->nid);
+        //send survey to participants
+        foreach($Purchases as $pdata)
         {
-            /*
-             * Its ok to load entire node here , it will be cached
-             * and we save time when loading for multiple p2b keys in 
-             * get_event_participants where we have to load it anyways.
-             */
-            $node = node_load($n_data->nid);
-            $Purchases = get_event_participants($node->nid);
-            //send survey to participants
-            foreach($Purchases as $pdata)
-            {
-                send_survey_mail($pdata['customer'],$node->title,$survey_url);
-            }
-            //mark as processed.
-            mark_node_feedback_sendt($n_data->nid);
+            send_survey_mail($pdata['customer'],$node->title,$survey_url);
         }
-    } 
+        //mark as processed.
+        mark_node_feedback_sendt($node->nid);
+    }
+     
 }
 /*
  * Adds a node to the feedback list.
@@ -240,7 +232,7 @@ function get_event_participants($nid)
 }
 function get_events_needing_feedback()
 {
-    $result = db_query('select nid from {ding_place2book_feedback} where feedback_sendt=0')->fetchAllKeyed(0,0);
+    $result = db_query('SELECT ding_place2book_feedback.nid as nid FROM ding_place2book_feedback join node on ding_place2book_feedback.nid = node.nid where ding_place2book_feedback.feedback_sendt = 0 and node.status = 1;')->fetchAllKeyed(0,0);
     $return = array();
     foreach($result as $value)
     {
@@ -251,8 +243,9 @@ function get_events_needing_feedback()
 function send_survey_mail($participant,$event_title,$survey_url)
 {
        $email = $participant['email'];
-       $message = t('Du har deltaget i bibliotekets arrangement: @event \n vi vil gerne høre din mening og beder dig udfylde spørgeskemaet <a href="@survey_url">her</a>'
+       $message = t('Du har deltaget i bibliotekets arrangement: <b>@event</b> <br/> vi vil gerne høre din mening og beder dig udfylde spørgeskemaet <a href="@survey_url">her</a>'
                ,array('@event' => $event_title,'@survey_url'=>$survey_url));
+       
       // Send the email.
       $params = array(
         'subject' => 'Vi har brug for din mening!',
@@ -266,5 +259,6 @@ function oc_place2book_feedback_mail($key, &$message, $params)
     {
         $message['body'] = $params['body'];
         $message['subject'] = $params['subject'];
+        $message['headers']['Content-Type'] = "text/html; charset=UTF-8; format=flowed";
     }
 }
