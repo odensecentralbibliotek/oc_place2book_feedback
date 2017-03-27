@@ -26,10 +26,10 @@ function oc_place2book_feedback_form_ding_event_node_form_alter(&$form, &$form_s
   );
    /*
     * auto check event feedback when we maintain p2b tickets.
-    */
+    * Removed for now until more stable and testet *
     $form['place2book']['place2book_send_feedback']['#states']['checked'] = array(
      ':input[name="place2book[maintain_copy]"]' =>  array('checked' => TRUE)
-    );
+    ); */
 
 }
 /*
