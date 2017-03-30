@@ -57,7 +57,7 @@ function oc_place2book_feedback_node_update($node) {
         }
         //if maintain copy is 0 or feedback is being disable
         
-        elseif($node->place2book['maintain_copy'] == 0 || $node->place2book['place2book_send_feedback'] == 0)
+        elseif($node->place2book['maintain_copy'] == 0 || $node->place2book['place2book_send_feedback'] == 0 || $node->place2book['passive'] != 1)
         {
             if(is_node_on_feedback_list($node->nid))
             {
