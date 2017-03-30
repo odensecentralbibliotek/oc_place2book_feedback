@@ -262,3 +262,16 @@ function oc_place2book_feedback_mail($key, &$message, $params)
         $message['headers']['Content-Type'] = "text/html; charset=UTF-8; format=flowed";
     }
 }
+function oc_place2book_feedback_form_alter(&$form, &$form_state, $form_id) {
+    if(strpos($form_id, 'webform_client_form') !== false)
+    {
+        //Styling of webform to make it more "professional"
+        $data = variable_get("ding_place2book_feedback_survey",'');
+        $survey_url = isset($data["oc_place2book_feedback_survey_url"]) ? $data["oc_place2book_feedback_survey_url"] :"";
+        $current_url = $GLOBALS['base_url'] . request_uri();
+        if ($survey_url == $current_url) {
+            //add css
+            drupal_add_css(drupal_get_path('module', 'oc_place2book_feedback') . "/css/survey_styling.css");
+        }
+    }
+}

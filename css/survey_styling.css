@@ -1,0 +1,25 @@
+.form-checkboxes .form-item, .form-radios .form-item{
+    display: inline-block;
+    margin-left: 5px;
+}
+.webform-component-radios label:first-child
+{
+    font-size: 16px;
+}
+.form-actions
+{
+    
+    margin-top:10px !important;
+}
+.form-actions input
+{
+
+}
+.page-title
+{
+    display:none;
+}
+.content
+{
+    padding:10px;
+}
