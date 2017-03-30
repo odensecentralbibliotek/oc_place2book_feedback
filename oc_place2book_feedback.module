@@ -21,7 +21,7 @@ function oc_place2book_feedback_form_ding_event_node_form_alter(&$form, &$form_s
    $form['place2book']['place2book_send_feedback'] = array(
     '#type' => 'checkbox',
     '#title' => t('Indhent feedback'),
-    '#default_value' => isset($node_settings['place2book_send_feedback']) ? (bool)$node_settings['place2book_send_feedback'] :  $node_settings['defaults']['place2book_send_feedback'],
+    '#default_value' => isset($node_settings['place2book_send_feedback']) ? (bool)$node_settings['place2book_send_feedback'] :  '',
     '#description' => t('If checked, a survey will be sendt to people who bougth ticket for the event.'),
   );
    /*
@@ -232,7 +232,7 @@ function get_event_participants($nid)
 }
 function get_events_needing_feedback()
 {
-    $result = db_query('SELECT ding_place2book_feedback.nid as nid FROM ding_place2book_feedback join node on ding_place2book_feedback.nid = node.nid where ding_place2book_feedback.feedback_sendt = 0 and node.status = 1;')->fetchAllKeyed(0,0);
+    $result = db_query('SELECT ding_place2book_feedback.nid as nid FROM ding_place2book_feedback join node on ding_place2book_feedback.nid = node.nid where ding_place2book_feedback.feedback_sendt = 0 and node.status = 0;')->fetchAllKeyed(0,0);
     $return = array();
     foreach($result as $value)
     {
