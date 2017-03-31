@@ -206,7 +206,7 @@ function get_event_participants($nid)
 
       $headers = array(
         'X-PLACE2BOOK-API-TOKEN' => $api_key,
-        'X-PLACE2BOOK-EVENT-ID' => 99133,
+        'X-PLACE2BOOK-EVENT-ID' => $place2book_id,
       );
       $options = array(
                 'method' => 'GET',
@@ -221,33 +221,33 @@ function get_event_participants($nid)
       $seccode = $tmp[1];
       //Get the event participants.
       unset($options['headers']['X-PLACE2BOOK-EVENT-ID']);
-        /*
-         * Can return json data but it is invalid and broken. place2book need to
-         * fix.
-         */
-        $p2b_participants_result = drupal_http_request("https://place2book.com/da/event_api/event_orders.xml?seccode=".$seccode, $options);
-        $xml = simplexml_load_string($p2b_participants_result->data);
-        $json = json_encode($xml);
-        $participants = json_decode($json,TRUE);
+    /*
+     * Can return json data but it is invalid and broken. place2book need to
+     * fix.
+     */
+    $p2b_participants_result = drupal_http_request("https://place2book.com/da/event_api/event_orders.xml?seccode=".$seccode, $options);
+    $xml = simplexml_load_string($p2b_participants_result->data);
+    $json = json_encode($xml);
+    $participants = json_decode($json,TRUE);
 
-        foreach($participants['event']['purchases'] as $purchase)
+    foreach($participants['event']['purchases'] as $purchase)
+    {
+        $valid_tickets = false;
+        foreach($purchase["tickets"] as $ticket)
         {
-            $valid_tickets = false;
-            foreach($purchase["tickets"] as $ticket)
+            if($ticket['credited'] == false && $purchase['released'] == false)
             {
-                if($ticket['credited'] == false && $purchase['released'] == false)
-                {
-                    $valid_tickets = true;
-                    break;
-                }
-            }
-            if($valid_tickets == true)
-            {
-                array_push($return_data,$purchase);
+                $valid_tickets = true;
+                break;
             }
         }
-      
-      return  $return_data;
+        if($valid_tickets == true)
+        {
+            array_push($return_data,$purchase);
+        }
+    }
+    
+    return  $return_data;
 }
 function get_events_needing_feedback()
 {
