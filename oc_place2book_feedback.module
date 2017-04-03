@@ -119,7 +119,7 @@ function oc_place2book_feedback_cron()
         //send survey to participants
         foreach($Purchases as $pdata)
         {
-            send_survey_mail($pdata['customer'],$node->title,$survey_url);
+            send_survey_mail($pdata['customer'],$node->title,$survey_url,$node->nid);
         }
         //mark as processed.
         mark_node_feedback_sendt($node->nid);
@@ -259,11 +259,11 @@ function get_events_needing_feedback()
     }
     return $return;
 }
-function send_survey_mail($participant,$event_title,$survey_url)
+function send_survey_mail($participant,$event_title,$survey_url,$nid)
 {
        $email = $participant['email'];
        $message = t('Du har deltaget i bibliotekets arrangement: <b>@event</b> <br/> vi vil gerne høre din mening og beder dig udfylde spørgeskemaet <a href="@survey_url">her</a>'
-               ,array('@event' => $event_title,'@survey_url'=>$survey_url));
+               ,array('@event' => $event_title,'@survey_url'=>$survey_url + "?nid=".$nid));
        
       // Send the email.
       $params = array(
@@ -288,9 +288,16 @@ function oc_place2book_feedback_form_alter(&$form, &$form_state, $form_id) {
         $data = variable_get("ding_place2book_feedback_survey",'');
         $survey_url = isset($data["oc_place2book_feedback_survey_url"]) ? $data["oc_place2book_feedback_survey_url"] :"";
         $current_url = $GLOBALS['base_url'] . request_uri();
+        $current_url = explode('?',$current_url);
+        $current_url = $current_url[0];
         if ($survey_url == $current_url) {
             //add css
             drupal_add_css(drupal_get_path('module', 'oc_place2book_feedback') . "/css/survey_styling.css");
+            $nid = isset($_GET['event_nid']) ? $_GET['event_nid'] : null;
+            if(isset($form['submitted']['event_nid']) && $nid != null)
+            {
+                $form['submitted']['event_nid']['#value'] = $nid;
+            }
         }
     }
 }
