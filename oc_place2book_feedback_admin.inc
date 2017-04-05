@@ -21,7 +21,9 @@ function oc_place2book_feedback_form_ding_place2book_admin_settings_form_alter(&
             $select_data[$item->nid] = $item->title;
         }
     }
-    /* $form['ding_place2book_feedback_survey']['oc_place2book_feedback_survey_url'] = array(
+    /*
+     * Migth be used in the future , if other kind of surveys will be sendt.
+     *  $form['ding_place2book_feedback_survey']['oc_place2book_feedback_survey_url'] = array(
       '#type' => 'textfield',
       '#title' => t('Survey Url'),
       '#default_value' => isset($data["oc_place2book_feedback_survey_url"]) ?  $data["oc_place2book_feedback_survey_url"] : "",
@@ -31,10 +33,10 @@ function oc_place2book_feedback_form_ding_place2book_admin_settings_form_alter(&
 
     $form['ding_place2book_feedback_survey']['oc_place2book_feedback_survey_nid'] = array(
         '#type' => 'select',
-        '#title' => t('Selected'),
+        '#title' => t('Webform til feedback'),
         '#options' => $select_data,
         '#default_value' => isset($data["oc_place2book_feedback_survey_nid"]) ? $data["oc_place2book_feedback_survey_nid"] : "",
-        '#description' => t('Set this to <em>Yes</em> if you would like this category to be selected by default.'),
+        '#description' => t('Den webform som bliver sendt ud til event deltagere.'),
     );
 
     $form['ding_place2book_event_nodes']['defaults']['#options']['place2book_send_feedback'] = t("Send survey feedback on end of p2b based event");
