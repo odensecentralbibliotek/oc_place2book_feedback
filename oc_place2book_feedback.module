@@ -8,12 +8,11 @@ include_once 'oc_place2book_feedback_stats.inc';
  * Adds the charting result page on each Webform node.
  */
 function oc_place2book_feedback_menu() {
-  $items['node/oc_p2b_feedback/chart-results'] = array(
-    'title' => 'Results as charts',
+  $items['admin/reports/oc_p2b_feedback'] = array(
+    'title' => 'ding event feedback',
     'page callback' => 'oc_place2book_feedback_stats_view',
-    //'page arguments' => array(1),
-    'access arguments' => array('view_webform_charts'),
-    'weight' => 7,
+    'access callback' => 'user_access',
+    'access arguments' => array('access all webform results'),
     'type' => MENU_LOCAL_TASK,
   );
   return $items;

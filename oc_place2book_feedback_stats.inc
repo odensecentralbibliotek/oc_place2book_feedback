@@ -71,7 +71,7 @@ function build_user_additional_comments($node) {
 
     // Make the table...
     foreach ($data as $textarea) {
-        $output = theme('table', array('header' => $headers, 'rows' => $textarea, 'attributes' => array('class' => 'tablesorter')));
+        $output = theme('table', array('header' => $headers, 'rows' => $textarea, 'attributes' => array('class' => array('tablesorter'))));
     }
 
     // Return the output with the pager attached to it.  The pager 
