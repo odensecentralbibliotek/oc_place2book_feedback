@@ -3,3 +3,5 @@ description = Indhenter feedback via webform fra deltagere i place2book events m
 core = 7.x
 package = Ding!
 dependencies[] = ding_place2book
+dependencies[] = tablesorter
+dependencies[] = webform

@@ -1,5 +1,38 @@
 <?php
 include_once 'oc_place2book_feedback_admin.inc';
+include_once 'oc_place2book_feedback_stats.inc';
+/**
+ * Implements hook_menu().
+ *
+ * Adds the charting result page on each Webform node.
+ */
+function oc_place2book_feedback_menu() {
+  $items['node/oc_p2b_feedback/chart-results'] = array(
+    'title' => 'Results as charts',
+    'page callback' => 'oc_place2book_feedback_stats_view',
+    //'page arguments' => array(1),
+    'access arguments' => array('view_webform_charts'),
+    'weight' => 7,
+    'type' => MENU_LOCAL_TASK,
+  );
+  return $items;
+}
+
+function oc_place2book_feedback_theme() {
+  $theme = array(
+    // Theme the result page.
+    'oc_p2b_stats_view_index' => array(
+      'variables' => array(
+        'selectable_nodes' => NULL,
+        'selected_node' => null,
+        'pie_data' => null,
+        'textarea_data' => null,
+      ),
+      'template' => 'templates/oc_p2b_stats_view',
+    )
+  );
+  return $theme;
+}
 /*
  * Alter the place2book form to allow feedback retrival from ticket based events.
  * 
@@ -105,8 +138,15 @@ function oc_place2book_feedback_cron()
      * and make them as processed.
      */
     $data = variable_get("ding_place2book_feedback_survey",'');
-    $survey_url = isset($data["oc_place2book_feedback_survey_url"]) ? $data["oc_place2book_feedback_survey_url"] :"";
-
+    $survey_url = isset($data["oc_place2book_feedback_survey_nid"]) ? $data["oc_place2book_feedback_survey_nid"] :"";
+    if(isset($survey_url) && $survey_url != "")
+    {
+        $survey_url = url('node/'.$survey_url,array('absolute' => true));
+    }
+    else
+    {
+        return;
+    }
     foreach($nids as $n_data)
     {
         /*
@@ -235,7 +275,7 @@ function get_event_participants($nid)
         $valid_tickets = false;
         foreach($purchase["tickets"] as $ticket)
         {
-            if($ticket['credited'] == false && $purchase['released'] == false)
+            if($ticket['credited'] == "false" && $ticket['released'] == "false")
             {
                 $valid_tickets = true;
                 break;
@@ -263,7 +303,7 @@ function send_survey_mail($participant,$event_title,$survey_url,$nid)
 {
        $email = $participant['email'];
        $message = t('Du har deltaget i bibliotekets arrangement: <b>@event</b> <br/> vi vil gerne høre din mening og beder dig udfylde spørgeskemaet <a href="@survey_url">her</a>'
-               ,array('@event' => $event_title,'@survey_url'=>$survey_url + "?nid=".$nid));
+               ,array('@event' => $event_title,'@survey_url'=>$survey_url . "?event_nid=".$nid));
        
       // Send the email.
       $params = array(
@@ -286,17 +326,27 @@ function oc_place2book_feedback_form_alter(&$form, &$form_state, $form_id) {
     {
         //Styling of webform to make it more "professional"
         $data = variable_get("ding_place2book_feedback_survey",'');
-        $survey_url = isset($data["oc_place2book_feedback_survey_url"]) ? $data["oc_place2book_feedback_survey_url"] :"";
-        $current_url = $GLOBALS['base_url'] . request_uri();
-        $current_url = explode('?',$current_url);
-        $current_url = $current_url[0];
-        if ($survey_url == $current_url) {
+        $survey_nid = isset($data["oc_place2book_feedback_survey_nid"]) ? $data["oc_place2book_feedback_survey_nid"] :"";
+        $current_node = menu_get_object();
+        if ($current_node->nid == $survey_nid) {
             //add css
             drupal_add_css(drupal_get_path('module', 'oc_place2book_feedback') . "/css/survey_styling.css");
             $nid = isset($_GET['event_nid']) ? $_GET['event_nid'] : null;
             if(isset($form['submitted']['event_nid']) && $nid != null)
             {
                 $form['submitted']['event_nid']['#value'] = $nid;
+            }
+            else
+            {
+                /*
+                 * It is required to set a event_nid so that the stats will be
+                 * usefull.
+                 */
+                unset($form['submitted']);
+                unset($form['actions']);
+                $form['submitted']['some_text'] = array(
+                    '#markup' => '<h2><p>Intet event valgt eller feltet eksistere ikke.</p></h2>'
+                  );
             }
         }
     }
