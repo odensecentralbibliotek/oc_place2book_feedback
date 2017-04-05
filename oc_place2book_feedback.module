@@ -8,23 +8,40 @@ include_once 'oc_place2book_feedback_stats.inc';
  * Adds the charting result page on each Webform node.
  */
 function oc_place2book_feedback_menu() {
-  $items['admin/reports/oc_p2b_feedback'] = array(
-    'title' => 'ding event feedback',
+  $items['node/%/oc_p2b_feedback'] = array(
+    'title' => 'Feedback',
     'page callback' => 'oc_place2book_feedback_stats_view',
-    'access callback' => 'user_access',
-    'access arguments' => array('access all webform results'),
+    'page arguments' => array(1),
+    'access callback' => 'oc_place2book_feedback_custom_access',
+    'access arguments' => array(1),
     'type' => MENU_LOCAL_TASK,
   );
   return $items;
 }
-
+function  oc_place2book_feedback_custom_access($nid)
+{
+    if(!is_node_on_feedback_list($nid))
+    {
+        return false;
+    }
+    return user_access('access all webform results');
+}
+/**
+ * Implements hook_admin_paths().
+ */
+function oc_place2book_feedback_admin_paths() {
+  if (variable_get('node_admin_theme')) {
+    $paths = array(
+      'node/*/oc_p2b_feedback' => TRUE,
+    );
+    return $paths;
+  }
+}
 function oc_place2book_feedback_theme() {
   $theme = array(
     // Theme the result page.
     'oc_p2b_stats_view_index' => array(
       'variables' => array(
-        'selectable_nodes' => NULL,
-        'selected_node' => null,
         'pie_data' => null,
         'textarea_data' => null,
       ),

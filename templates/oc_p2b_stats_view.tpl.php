@@ -1,15 +1,4 @@
-<form>
-    <select name="oc_p2b_feedback_select_node">
-        <option value=""></option>
-        <?php foreach ($selectable_nodes as $node) { ?>
-            <option <?php if ($node->nid == $selected_node) {
-            echo "selected='selected'";
-        } ?> value="<?php echo $node->nid; ?>"><?php echo $node->title; ?></option>
-<?php } ?>
-    </select>
-    <input type="submit" value="Vælg">
-</form>
-<?php if ($pie_data != null && $selected_node != null) { ?>
+<?php if ($pie_data != null) { ?>
     <?php foreach ($pie_data as $key => $value) { ?>
         <div id="<?php echo $key . "_container" ?>" style="min-width: 310px; height: 400px; max-width: 100%; margin: 0 auto"></div>
     <?php } ?>
@@ -74,12 +63,10 @@
         </select>
     </div>
     <?php
-} elseif ($pie_data == null && $selected_node != null) {
+} elseif ($pie_data == null) {
     ?>
     <h2>No data available</h2>
     <?php
-} elseif ($selected_node == null) {
-    echo "<h1>Select a event to get feedback</h1>";
-}
+} 
 ?>
 

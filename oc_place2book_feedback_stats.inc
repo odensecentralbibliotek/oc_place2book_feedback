@@ -1,15 +1,10 @@
 <?php
 
-function oc_place2book_feedback_stats_view() {
-    /*
-     * Get all Nodes available for chartings
-     */
-    $nodes_with_feedback = get_events_feedback_sendt();
-    $nodes = node_load_multiple($nodes_with_feedback);
+function oc_place2book_feedback_stats_view($nid) {
     /*
      * If a node is selected , get its data and prebare it for charing.
      */
-    $selected_node = isset($_GET['oc_p2b_feedback_select_node']) ? $_GET['oc_p2b_feedback_select_node'] : null;
+    $selected_node = $nid;
     /*
      * Extract data for chart.
      */
@@ -25,7 +20,7 @@ function oc_place2book_feedback_stats_view() {
 
     drupal_add_css(drupal_get_path('module', 'oc_place2book_feedback') . '/css/tablesort_pager.css');
 
-    return theme('oc_p2b_stats_view_index', array('selectable_nodes' => $nodes, 'selected_node' => $selected_node, 'pie_data' => $pie_data, 'textarea_data' => $textarea_data));
+    return theme('oc_p2b_stats_view_index', array('pie_data' => $pie_data, 'textarea_data' => $textarea_data));
 }
 
 function get_events_feedback_sendt() {
