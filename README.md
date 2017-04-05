@@ -11,7 +11,7 @@ De kan tilgås gennem menu punktet:
 
 Feedback emails are sendt out after the events are unpublished and they have been marked for feedback collection via the node-create/edit form. It is required that the event is using p2b for ticket manageing and that the event is not passive.
 
-*note*
+<h2>note</h2>
 When you activate the module it will create a webform to be use called "Arrangements feedback". You will still have to manualy select the webform to use under /admin/config/ding/place2book "PLACE2BOOK FEEDBACK SETTINGS" before the feedback system will work.
 
 Once you have saved the selection , the module will take over the webform and style it + ensure it contains neccesary information for statistics to be generated.
