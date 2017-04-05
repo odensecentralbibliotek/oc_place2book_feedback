@@ -7,7 +7,7 @@ på sin webformular.
 
 Statestik siden kan automatisk generer pie charts og paginerede tabeller for "select"  og "textarea" felt typer på webformularen.
 
-De kan tilgås gennem menu punktet: 
+De kan tilgås gennem menu punktet: /admin/reports/oc_p2b_feedback
 
 Feedback emails are sendt out after the events are unpublished and they have been marked for feedback collection via the node-create/edit form. It is required that the event is using p2b for ticket manageing and that the event is not passive.
 
