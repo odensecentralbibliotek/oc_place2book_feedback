@@ -1,11 +1,11 @@
 <?php
+
 function oc_place2book_feedback_stats_view() {
     /*
      * Get all Nodes available for chartings
      */
     $nodes_with_feedback = get_events_feedback_sendt();
     $nodes = node_load_multiple($nodes_with_feedback);
-    
     /*
      * If a node is selected , get its data and prebare it for charing.
      */
@@ -19,29 +19,32 @@ function oc_place2book_feedback_stats_view() {
     /*
      * Render the chart + additional data for the given node data.
      */
-    return theme('oc_p2b_stats_view_index',array('selectable_nodes' => $nodes,'selected_node' => $selected_node,'pie_data' => $pie_data,'textarea_data' => $textarea_data));
+    drupal_add_js(drupal_get_path('module', 'oc_place2book_feedback') . '/js/highcharts.js');
+    drupal_add_js(drupal_get_path('module', 'oc_place2book_feedback') . '/js/exporting.js');
+    drupal_add_js(drupal_get_path('module', 'oc_place2book_feedback') . '/js/jquery.tablesorter.pager.js');
+
+    drupal_add_css(drupal_get_path('module', 'oc_place2book_feedback') . '/css/tablesort_pager.css');
+
+    return theme('oc_p2b_stats_view_index', array('selectable_nodes' => $nodes, 'selected_node' => $selected_node, 'pie_data' => $pie_data, 'textarea_data' => $textarea_data));
 }
-function get_events_feedback_sendt()
-{
-    $result = db_query('SELECT ding_place2book_feedback.nid as nid FROM ding_place2book_feedback join node on ding_place2book_feedback.nid = node.nid where ding_place2book_feedback.feedback_sendt = 1 and node.status = 0;')->fetchAllKeyed(0,0);
+
+function get_events_feedback_sendt() {
+    $result = db_query('SELECT ding_place2book_feedback.nid as nid FROM ding_place2book_feedback join node on ding_place2book_feedback.nid = node.nid where ding_place2book_feedback.feedback_sendt = 1 and node.status = 0;')->fetchAllKeyed(0, 0);
     $return = array();
-    foreach($result as $value)
-    {
-        array_push($return,$value);
+    foreach ($result as $value) {
+        array_push($return, $value);
     }
     return $return;
 }
-function build_user_additional_comments($node)
-{
-    if(!isset($node) || $node == false)
-    {
+
+function build_user_additional_comments($node) {
+    if (!isset($node) || $node == false) {
         return array();
     }
     $sids = get_all_sids_for_nid($node->nid);
     $webform_id = get_node_webform($node->nid);
     $webform_node = node_load($webform_id);
-    if(sizeof($sids) == 0 || $webform_id == false)
-    {
+    if (sizeof($sids) == 0 || $webform_id == false) {
         return null;
     }
     $components = $webform_node->webform['components'];
@@ -49,124 +52,104 @@ function build_user_additional_comments($node)
         t('Yderligere kommentare')
     );
     $data = array();
-    foreach($sids as $sid)
-      {
-          $webform_response_data = get_sid_data($sid);
-          foreach($webform_response_data as $sid_data)
-          {
-              foreach ($components as $cid => $component) {
-                  $type = $component['type'];
-                       if($type == "textarea" && $component['cid'] == $sid_data->cid)
-                       {
-                           if(!isset($data[$component['name']]))
-                           {
-                               $data[$component['name']] = array();
-                           }
-                           if($sid_data->data != "")
-                           {
-                                $data[$component['name']][] = array(array('data' => $sid_data->data));
-                           }
-                       }
-              }
-          }
-      }
+    foreach ($sids as $sid) {
+        $webform_response_data = get_sid_data($sid);
+        foreach ($webform_response_data as $sid_data) {
+            foreach ($components as $cid => $component) {
+                $type = $component['type'];
+                if ($type == "textarea" && $component['cid'] == $sid_data->cid) {
+                    if (!isset($data[$component['name']])) {
+                        $data[$component['name']] = array();
+                    }
+                    if ($sid_data->data != "") {
+                        $data[$component['name']][] = array(array('data' => $sid_data->data));
+                    }
+                }
+            }
+        }
+    }
 
     // Make the table...
-      foreach($data as $textarea)
-      {
-        $output = theme('table',  array('header' => $headers, 'rows' => $textarea,'attributes' => array('class' => 'tablesorter')));
-      }
+    foreach ($data as $textarea) {
+        $output = theme('table', array('header' => $headers, 'rows' => $textarea, 'attributes' => array('class' => 'tablesorter')));
+    }
 
     // Return the output with the pager attached to it.  The pager 
     // is the box underneath the table that allows people to jump 
     // to the next page.
     return $output;
 }
-function build_node_pie_data($node)
-{
-    try
-    {
-        if(!isset($node) || $node == false)
-        {
+
+function build_node_pie_data($node) {
+    try {
+        if (!isset($node) || $node == false) {
             return array();
         }
         $sids = get_all_sids_for_nid($node->nid);
         $webform_id = get_node_webform($node->nid);
         $webform_node = node_load($webform_id);
-        if(sizeof($sids) == 0 || $webform_id == false)
-        {
+        if (sizeof($sids) == 0 || $webform_id == false) {
             return null;
         }
         // Get the callback to use, depending on the component.
         $components = $webform_node->webform['components'];
 
-       $data = array();
-       foreach($sids as $sid)
-       {
-           $webform_response_data = get_sid_data($sid);
-           foreach($webform_response_data as $sid_data)
-           {
-               foreach ($components as $cid => $component) {
-                   if($sid_data->cid == $component['cid'])
-                   {
-                       /*
-                        * build result set.
-                        */
-                       $type = $component['type'];
-                       if($type == "select")
-                       {
-                           if(!isset($data[$component['name']]))
-                           {
-                               $data[$component['name']] = array();
-                           }
-                           $found = false;
-                           foreach($data[$component['name']] as $i => $pie_data)
-                           {
-                               if($pie_data['name'] == $sid_data->data)
-                               {
-                                   $data[$component['name']][$i]['y'] += 1;
-                                   $found = true;
-                                   break;
-                               }
-                           }
-                           if($found == false)
-                           {
-                               $data[$component['name']][] = array('name' => $sid_data->data,'y' => 1);
-                           }
-                       }
-                       break;
-                   }
-               }
-           }
-       }
-       return $data;
+        $data = array();
+        foreach ($sids as $sid) {
+            $webform_response_data = get_sid_data($sid);
+            foreach ($webform_response_data as $sid_data) {
+                foreach ($components as $cid => $component) {
+                    if ($sid_data->cid == $component['cid']) {
+                        /*
+                         * build result set.
+                         */
+                        $type = $component['type'];
+                        if ($type == "select") {
+                            if (!isset($data[$component['name']])) {
+                                $data[$component['name']] = array();
+                            }
+                            $found = false;
+                            foreach ($data[$component['name']] as $i => $pie_data) {
+                                if ($pie_data['name'] == $sid_data->data) {
+                                    $data[$component['name']][$i]['y'] += 1;
+                                    $found = true;
+                                    break;
+                                }
+                            }
+                            if ($found == false) {
+                                $data[$component['name']][] = array('name' => $sid_data->data, 'y' => 1);
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        return $data;
     } catch (Exception $ex) {
         return null;
     }
-    
 }
-function get_sid_data($sid)
-{
+
+function get_sid_data($sid) {
     $result = db_query('SELECT * FROM webform_submitted_data where sid = ' . $sid)->fetchAll();
     return $result;
 }
-function get_all_sids_for_nid($nid)
-{
-    $result = db_query('SELECT sid FROM webform_submitted_data where data= ' . $nid)->fetchAllKeyed(0,0);
+
+function get_all_sids_for_nid($nid) {
+    $result = db_query('SELECT sid FROM webform_submitted_data where data= ' . $nid)->fetchAllKeyed(0, 0);
     $return = array();
-    foreach($result as $value)
-    {
-        array_push($return,$value);
+    foreach ($result as $value) {
+        array_push($return, $value);
     }
     return $return;
 }
-function get_node_webform($nid)
-{
-    $result = db_query('SELECT nid FROM webform_submitted_data where data= ' . $nid)->fetchAllKeyed(0,0);
+
+function get_node_webform($nid) {
+    $result = db_query('SELECT nid FROM webform_submitted_data where data= ' . $nid)->fetchAllKeyed(0, 0);
     $return = array();
-    foreach($result as $value)
-    {
-        array_push($return,$value);
+    foreach ($result as $value) {
+        array_push($return, $value);
     }
     return reset($return);
 }
