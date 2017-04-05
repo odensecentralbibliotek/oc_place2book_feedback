@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the oc place2book feedback webform feature.
+ */
+
+include_once 'oc_place2book_feedback_webform.features.inc';

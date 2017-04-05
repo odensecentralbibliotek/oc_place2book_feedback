@@ -5,3 +5,6 @@ package = Ding!
 dependencies[] = ding_place2book
 dependencies[] = tablesorter
 dependencies[] = webform
+dependencies[] = form_builder
+dependencies[] = webform_features
+dependencies[] = oc_place2book_feedback_webform
