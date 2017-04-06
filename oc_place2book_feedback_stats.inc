@@ -15,10 +15,11 @@ function oc_place2book_feedback_stats_view($nid) {
      * Render the chart + additional data for the given node data.
      */
     drupal_add_js(drupal_get_path('module', 'oc_place2book_feedback') . '/js/highcharts.js');
-    drupal_add_js(drupal_get_path('module', 'oc_place2book_feedback') . '/js/exporting.js');
-    drupal_add_js(drupal_get_path('module', 'oc_place2book_feedback') . '/js/jquery.tablesorter.pager.js');
 
+    drupal_add_js(drupal_get_path('module', 'oc_place2book_feedback') . '/js/jquery.tablesorter.pager.js');
+    
     drupal_add_css(drupal_get_path('module', 'oc_place2book_feedback') . '/css/tablesort_pager.css');
+    drupal_add_css(drupal_get_path('module', 'oc_place2book_feedback') . '/css/oc_place2book_stats.css');
 
     return theme('oc_p2b_stats_view_index', array('pie_data' => $pie_data, 'textarea_data' => $textarea_data));
 }
@@ -147,4 +148,22 @@ function get_node_webform($nid) {
         array_push($return, $value);
     }
     return reset($return);
+}
+function oc_place2book_feedback_stats_output_pdf($nid)
+{
+     global $base_url;
+     $pdf_filename = "feedback_" . $nid;
+     $meta = array();
+     $html = "<html><head><meta charset='UTF-8'>";
+     $html .= "<script src='https://code.jquery.com/jquery-3.2.1.min.js'></script>";
+     $html .= "<script src='".$base_url."/".drupal_get_path('module', 'oc_place2book_feedback') . '/js/highcharts.js'."'></script>";
+     $html .= "<link rel='stylesheet' type='text/css' href='".$base_url."/".drupal_get_path('module', 'oc_place2book_feedback') . '/css/oc_p2b_stats_print.css'."'>";
+     //$html .= "<script src='".$base_url."/".drupal_get_path('module', 'oc_place2book_feedback') . '/js/jquery.tablesorter.pager.js'."'></script>";
+     $html .="</head><body>";
+     $html .= oc_place2book_feedback_stats_view($nid);
+     $html.="</body></html>";
+     
+     $pdf = print_pdf_generate_html($html,$meta);
+     print_pdf_dispose_content($pdf, $pdf_filename);
+     drupal_exit();   
 }
