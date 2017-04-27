@@ -1,4 +1,4 @@
-<?php if ($pie_data != null) { ?>
+<?php if ($pie_data != null || $bar_data != null) { ?>
     
     <div class="align-center" style="">
     <?php foreach ($pie_data as $key => $value) { ?>
@@ -55,7 +55,7 @@
     
     <script>
     <?php
-    foreach ($pie_data as $key => $value) {
+    foreach ($bar_data as $key => $value) {
         ?>
     Highcharts.chart('<?php echo $key . "_container" ?>', {
             chart: {
@@ -91,7 +91,7 @@
                     borderWidth: 0
                 }
             },
-            series: <?php echo json_encode(reset($bar_data)); ?>
+            series: <?php echo json_encode($value); ?>
         });
      <?php } ?>
     </script>
