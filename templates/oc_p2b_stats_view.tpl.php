@@ -81,10 +81,6 @@
                     text: 'tilfreshed'
                 }
             },
-            tooltip: {
-                shared: true,
-                useHTML: true
-            },
             plotOptions: {
                 column: {
                     pointPadding: 0.2,
