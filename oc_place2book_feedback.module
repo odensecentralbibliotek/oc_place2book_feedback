@@ -44,6 +44,7 @@ function oc_place2book_feedback_theme() {
       'variables' => array(
         'pie_data' => null,
         'textarea_data' => null,
+        'bar_data' => null,
       ),
       'template' => 'templates/oc_p2b_stats_view',
     )

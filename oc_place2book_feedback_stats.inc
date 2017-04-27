@@ -10,6 +10,7 @@ function oc_place2book_feedback_stats_view($nid) {
      */
     $node = node_load($selected_node);
     $pie_data = build_node_pie_data($node);
+    $bar_data = build_node_bar_data($node);
     $textarea_data = build_user_additional_comments($node);
     /*
      * Render the chart + additional data for the given node data.
@@ -20,7 +21,7 @@ function oc_place2book_feedback_stats_view($nid) {
 
     drupal_add_css(drupal_get_path('module', 'oc_place2book_feedback') . '/css/tablesort_pager.css');
 
-    return theme('oc_p2b_stats_view_index', array('pie_data' => $pie_data, 'textarea_data' => $textarea_data));
+    return theme('oc_p2b_stats_view_index', array('pie_data' => $pie_data, 'textarea_data' => $textarea_data,'bar_data' => $bar_data));
 }
 
 function get_events_feedback_sendt() {
@@ -125,7 +126,56 @@ function build_node_pie_data($node) {
         return null;
     }
 }
+function build_node_bar_data($node) {
+    try {
+        if (!isset($node) || $node == false) {
+            return array();
+        }
+        $sids = get_all_sids_for_nid($node->nid);
+        $webform_id = get_node_webform($node->nid);
+        $webform_node = node_load($webform_id);
+        if (sizeof($sids) == 0 || $webform_id == false) {
+            return null;
+        }
+        // Get the callback to use, depending on the component.
+        $components = $webform_node->webform['components'];
 
+        $data = array();
+        foreach ($sids as $sid) {
+            $webform_response_data = get_sid_data($sid);
+            foreach ($webform_response_data as $sid_data) {
+                foreach ($components as $cid => $component) {
+                    if ($sid_data->cid == $component['cid']) {
+                        /*
+                         * build result set.
+                         */
+                        $type = $component['type'];
+                        if ($type == "select") {
+                            if (!isset($data[$component['name']])) {
+                                $data[$component['name']] = array();
+                            }
+                            $found = false;
+                            foreach ($data[$component['name']] as $i => $pie_data) {
+                                if ($pie_data['name'] == $sid_data->data) {
+                                    $data[$component['name']][$i]['data'][0] += 1;
+                                    $found = true;
+                                    break;
+                                }
+                            }
+                            if ($found == false) {
+                                $data[$component['name']][] = array('name' => $sid_data->data, 'data' => [1]);
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        return $data;
+    } catch (Exception $ex) {
+        return null;
+    }
+}
 function get_sid_data($sid) {
     $result = db_query('SELECT * FROM webform_submitted_data where sid = ' . $sid)->fetchAll();
     return $result;

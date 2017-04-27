@@ -2,6 +2,7 @@
     <?php foreach ($pie_data as $key => $value) { ?>
         <div id="<?php echo $key . "_container" ?>" style="min-width: 310px; height: 400px; max-width: 100%; margin: 0 auto"></div>
     <?php } ?>
+    <div id="container_line" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
     <script>
         jQuery(document).ready(function () {
             jQuery('.tablesorter').tablesorterPager({container: jQuery("#pager")});
@@ -45,6 +46,47 @@
 
     <?php } ?>
 
+    </script>
+    
+    <script>
+    Highcharts.chart('container_line', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: 'Bruger response'
+            },
+            subtitle: {
+                text: ''
+            },
+            xAxis: {
+                categories: [
+                   'Tilfresheds værdier'
+                ],
+                crosshair: true
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: 'tilfreshed'
+                }
+            },
+            tooltip: {
+                headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                    '<td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>',
+                footerFormat: '</table>',
+                shared: true,
+                useHTML: true
+            },
+            plotOptions: {
+                column: {
+                    pointPadding: 0.2,
+                    borderWidth: 0
+                }
+            },
+            series: <?php echo json_encode(reset($bar_data)); ?>
+        });
     </script>
     <?php
     echo $textarea_data;
