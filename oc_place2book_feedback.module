@@ -16,6 +16,14 @@ function oc_place2book_feedback_menu() {
     'access arguments' => array(1),
     'type' => MENU_LOCAL_TASK,
   );
+  $items['node/%/oc_p2b_feedback/pdf'] = array(
+    'title' => 'Feedback',
+    'page callback' => 'oc_place2book_feedback_stats_output_pdf',
+    'page arguments' => array(1),
+    'access callback' => 'oc_place2book_feedback_custom_access',
+    'access arguments' => array(1),
+    'type' => MENU_LOCAL_TASK,
+  );
   return $items;
 }
 function  oc_place2book_feedback_custom_access($nid)
@@ -47,7 +55,11 @@ function oc_place2book_feedback_theme() {
         'bar_data' => null,
       ),
       'template' => 'templates/oc_p2b_stats_view',
-    )
+    ),
+    'oc_p2b_stats_pdf_print' => array(
+        'variables' => array(),
+        'template' => 'templates/oc_p2b_stats_print_pdf'
+    ),
   );
   return $theme;
 }

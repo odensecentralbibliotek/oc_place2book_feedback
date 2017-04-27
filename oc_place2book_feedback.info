@@ -8,3 +8,6 @@ dependencies[] = webform
 dependencies[] = form_builder
 dependencies[] = webform_features
 dependencies[] = oc_place2book_feedback_webform
+dependencies[] = print_pdf
+dependencies[] = print_pdf_wkhtmltopdf
+
