@@ -82,8 +82,6 @@
                 }
             },
             tooltip: {
-                headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
-                footerFormat: '</table>',
                 shared: true,
                 useHTML: true
             },
