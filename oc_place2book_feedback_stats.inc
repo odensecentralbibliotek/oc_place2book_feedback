@@ -164,7 +164,7 @@ function build_node_bar_data($node) {
                                 }
                             }
                             if ($found == false) {
-                                $data[$component['name']][] = array('name' => $sid_data->data, 'data' => [1]);
+                                $data[$component['name']][] = array('name' => $sid_data->data, 'data' => array(1));
                             }
                         }
                         break;
