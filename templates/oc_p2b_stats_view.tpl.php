@@ -2,7 +2,7 @@
     
     <div class="align-center" style="">
     <?php
-    $pie_data  = isset($pie_data) ? $pie_data : $bar_data;
+    $pie_data  = isset($pie_data) && $pie_data != null ? $pie_data : $bar_data;
     foreach ($pie_data as $key => $value) { ?>
     
         <div id="<?php echo $key . "_container" ?>" style="min-width: 100%; height: 400px; max-width: 100%; margin: 0 auto"></div>
