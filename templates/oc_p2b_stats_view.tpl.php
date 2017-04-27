@@ -8,7 +8,6 @@
         <div id="<?php echo $key . "_container" ?>" style="min-width: 100%; height: 400px; max-width: 100%; margin: 0 auto"></div>
    
     <?php } ?>
-    <div id="container_line" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
     <script>
         jQuery(document).ready(function () {
             jQuery('.tablesorter').tablesorterPager({container: jQuery("#pager")});
