@@ -64,7 +64,7 @@
                 type: 'column'
             },
             title: {
-                text: 'Bruger response'
+                text: '<?php echo $key ?>'
             },
             subtitle: {
                 text: ''
