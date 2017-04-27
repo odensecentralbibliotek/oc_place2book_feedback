@@ -9,7 +9,7 @@ function oc_place2book_feedback_stats_view($nid) {
      * Extract data for chart.
      */
     $node = node_load($selected_node);
-    $pie_data = build_node_pie_data($node);
+    $pie_data = array();// build_node_pie_data($node);
     $bar_data = build_node_bar_data($node);
     $textarea_data = build_user_additional_comments($node);
     /*

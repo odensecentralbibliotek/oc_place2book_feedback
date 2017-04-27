@@ -54,7 +54,10 @@
     </script>
     
     <script>
-    Highcharts.chart('container_line', {
+    <?php
+    foreach ($pie_data as $key => $value) {
+        ?>
+    Highcharts.chart('<?php echo $key . "_container" ?>', {
             chart: {
                 type: 'column'
             },
@@ -78,8 +81,6 @@
             },
             tooltip: {
                 headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
-                pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
-                    '<td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>',
                 footerFormat: '</table>',
                 shared: true,
                 useHTML: true
@@ -92,6 +93,7 @@
             },
             series: <?php echo json_encode(reset($bar_data)); ?>
         });
+     <?php } ?>
     </script>
     <?php
         echo $textarea_data;
