@@ -45,9 +45,7 @@ function build_user_additional_comments($node) {
         return null;
     }
     $components = $webform_node->webform['components'];
-    $headers = array(
-        t('Yderligere kommentare')
-    );
+
     $data = array();
     foreach ($sids as $sid) {
         $webform_response_data = get_sid_data($sid);
@@ -65,15 +63,20 @@ function build_user_additional_comments($node) {
             }
         }
     }
-
+    $output = "";
     // Make the table...
-    foreach ($data as $textarea) {
-        $output = theme('table', array('header' => $headers, 'rows' => $textarea, 'attributes' => array('class' => array('tablesorter'))));
+    foreach ($data as $key => $textarea) {
+        $headers = array(
+        $key
+        );
+        $output .= theme('table', array('header' => $headers, 'rows' => $textarea, 'attributes' => array('class' => array('tablesorter'),'id' => $key)));
+ 
     }
 
     // Return the output with the pager attached to it.  The pager 
     // is the box underneath the table that allows people to jump 
     // to the next page.
+    
     return $output;
 }
 

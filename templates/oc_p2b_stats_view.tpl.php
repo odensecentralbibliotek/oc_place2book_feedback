@@ -10,7 +10,20 @@
     <?php } ?>
     <script>
         jQuery(document).ready(function () {
-            jQuery('.tablesorter').tablesorterPager({container: jQuery("#pager")});
+            var tabels = jQuery('.tablesorter');
+            jQuery.each(tabels,function(c,t){
+                var pager_template = jQuery(".pager-template").clone();
+                pager_template.attr('id','pager_' +c);
+                pager_template.removeClass('js-hide');
+                pager_template.removeClass('pager-template');
+                pager_template.addClass('pager');
+                jQuery(t).after(pager_template);
+                jQuery(t).tablesorterPager({container: jQuery('#pager_' +c)});
+                
+                
+            })
+            jQuery('.pager').attr('top','initial');
+            jQuery('.pager').attr('position','initial');
         });
 
     <?php
@@ -94,19 +107,19 @@
         echo $textarea_data;
     ?>
    
-    <div id="pager" class="pager">
-        <img src="<?php echo "/" . drupal_get_path('module', 'oc_place2book_feedback') . "/img/first.png" ?>" class="first"/>
-        <img src="<?php echo "/" . drupal_get_path('module', 'oc_place2book_feedback') . "/img/prev.png" ?>" class="prev"/>
-        <input type="text" class="pagedisplay"/>
-        <img src="<?php echo "/" . drupal_get_path('module', 'oc_place2book_feedback') . "/img/next.png" ?>" class="next"/>
-        <img src="<?php echo "/" . drupal_get_path('module', 'oc_place2book_feedback') . "/img/last.png" ?>" class="last"/>
-        <select class="pagesize">
-            <option selected="selected"  value="10">10</option>
-            <option value="20">20</option>
-            <option value="30">30</option>
-            <option  value="40">40</option>
-        </select>
-    </div>
+       <div id="" class="pager-template js-hide">
+            <img src="<?php echo "/" . drupal_get_path('module', 'oc_place2book_feedback') . "/img/first.png" ?>" class="first"/>
+            <img src="<?php echo "/" . drupal_get_path('module', 'oc_place2book_feedback') . "/img/prev.png" ?>" class="prev"/>
+            <input type="text" class="pagedisplay"/>
+            <img src="<?php echo "/" . drupal_get_path('module', 'oc_place2book_feedback') . "/img/next.png" ?>" class="next"/>
+            <img src="<?php echo "/" . drupal_get_path('module', 'oc_place2book_feedback') . "/img/last.png" ?>" class="last"/>
+            <select class="pagesize">
+                <option selected="selected"  value="10">10</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+                <option  value="40">40</option>
+            </select>
+        </div>
     </div>
     <?php
 } elseif ($pie_data == null) {
